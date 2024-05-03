@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "finder-webpart-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/finderWebpart/FinderWebpartWebPart.js",
+          "manifest": "./src/webparts/finderWebpart/FinderWebpartWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "FinderWebpartWebPartStrings": "lib/webparts/finderWebpart/loc/{locale}.js"
+  }
+}
