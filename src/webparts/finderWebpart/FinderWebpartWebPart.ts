@@ -3,23 +3,25 @@ import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration,
-  PropertyPaneTextField
+  PropertyPaneTextField, PropertyPaneDropdown
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { IReadonlyTheme } from '@microsoft/sp-component-base';
-
 import * as strings from 'FinderWebpartWebPartStrings';
 import FinderWebpart from './components/FinderWebpart';
-import { IFinderWebpartProps } from './components/IFinderWebpartProps';
+import { IFinderWebpartProps, IFinderWebpartWebPartProps } from './interfaces/IFinderWebpartProps';
+import { FinderWebpartService } from './services';
+import { IDropdownOption } from '@fluentui/react';
+import { IDocumentLibraryInformation } from "@pnp/sp/sites";
 
-export interface IFinderWebpartWebPartProps {
-  description: string;
-}
+
 
 export default class FinderWebpartWebPart extends BaseClientSideWebPart<IFinderWebpartWebPartProps> {
-
+  private _service: FinderWebpartService;
   private _isDarkTheme: boolean = false;
   private _environmentMessage: string = '';
+  private _dropdownOptions: IDropdownOption[] = [];
+
 
   public render(): void {
     const element: React.ReactElement<IFinderWebpartProps> = React.createElement(
@@ -29,20 +31,55 @@ export default class FinderWebpartWebPart extends BaseClientSideWebPart<IFinderW
         isDarkTheme: this._isDarkTheme,
         environmentMessage: this._environmentMessage,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName
+        userDisplayName: this.context.pageContext.user.displayName,
+        context: this.context,
+        selectedDocument: this.properties.selectedDocument,
+        getDocLibrary: this.getDocLibrary.bind(this)
+
       }
     );
 
     ReactDom.render(element, this.domElement);
   }
 
-  protected onInit(): Promise<void> {
-    return this._getEnvironmentMessage().then(message => {
-      this._environmentMessage = message;
-    });
+  protected async onInit(): Promise<void> {
+    await super.onInit();
+    this._service = new FinderWebpartService(this.context);
+    this._environmentMessage = await this._getEnvironmentMessage();
+    await this.getDocLibrary();
   }
 
+  // private async getDocLibrary(): Promise<void> {
+  //   const url: string = this.context.pageContext.web.absoluteUrl;
+  //   const getDoclibarry = await this._service.getDocLibrary(url);
+  //   console.log('getDoclibarry: ', getDoclibarry);
 
+  //   // Update the dropdown options with the data from getDocLibrary
+  //   this._dropdownOptions = getDoclibarry.map((item: any) => ({
+
+  //     key: item.Title,
+  //     text: item.Title
+  //   }));
+
+  //   // Force re-render to update the property pane
+  //   // this.render();
+
+  // }
+
+  private async getDocLibrary(): Promise<void> {
+    const url: string = this.context.pageContext.web.absoluteUrl;
+    const getDoclibarry: IDocumentLibraryInformation[] = await this._service.getDocLibrary(url);
+    // console.log('getDoclibarry: ', getDoclibarry);
+
+    // getDoclibarry.forEach((docLib: IDocumentLibraryInformation) => {
+    //   console.log('docLib: ', docLib);
+
+    // });
+    this._dropdownOptions = getDoclibarry.map((item: any) => ({
+      key: item.Title,
+      text: item.Title
+    }));
+  }
 
   private _getEnvironmentMessage(): Promise<string> {
     if (!!this.context.sdks.microsoftTeams) { // running in Teams, office.com or Outlook
@@ -97,6 +134,7 @@ export default class FinderWebpartWebPart extends BaseClientSideWebPart<IFinderW
   }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+
     return {
       pages: [
         {
@@ -109,6 +147,13 @@ export default class FinderWebpartWebPart extends BaseClientSideWebPart<IFinderW
               groupFields: [
                 PropertyPaneTextField('description', {
                   label: strings.DescriptionFieldLabel
+                }),
+
+                PropertyPaneDropdown('selectedDocument', {
+                  label: 'Select Document',
+                  options: this._dropdownOptions,
+                  // onChanged: this.onDropdownChange.bind(this)
+
                 })
               ]
             }
@@ -117,4 +162,12 @@ export default class FinderWebpartWebPart extends BaseClientSideWebPart<IFinderW
       ]
     };
   }
+
+  // private onDropdownChange(option: IDropdownOption, index?: number): void {
+  //   // Handle the change event of the dropdown here
+  //   console.log('Selected document:', option);
+  //   // You can update state or perform any other action here
+  // }
+
+
 }

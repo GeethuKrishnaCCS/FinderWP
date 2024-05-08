@@ -5,6 +5,7 @@
   padding: 1em;
   color: "[theme:bodyText, default: #323130]";
   color: var(--bodyText);
+
   &.teams {
     font-family: $ms-font-family-fallbacks;
   }
@@ -31,4 +32,21 @@
       color: var(--linkHovered); // note: CSS Custom Properties support is limited to modern browsers only
     }
   }
+}
+
+.button {
+  background-color: rgb(57, 152, 175);
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  margin: 5px;
+  /* padding: 10px; */
+  height: 100px;
+  width: 270px;
+}
+.borderBox{
+  // border: 1px solid black;
+  padding: 20px;
+  box-shadow: 0 2.6px 5.6px 0 #8a8a8a, 0 0.3px 0.9px 0 #8a8a8a;
 }
